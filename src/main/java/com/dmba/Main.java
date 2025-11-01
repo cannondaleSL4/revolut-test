@@ -52,7 +52,11 @@ class UrlShorterService implements ShorterUrl{
 
     @Override
     public String getShortUrl(String fullUrl) {
-        return "";
+        if (fullUrl == null || fullUrl.isEmpty()) {
+            throw new RuntimeException("Your URL is empty");
+        }
+
+
     }
 
     @Override
