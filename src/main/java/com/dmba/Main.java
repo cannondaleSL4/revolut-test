@@ -1,5 +1,6 @@
 package com.dmba;
 
+import java.security.SecureRandom;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -11,31 +12,53 @@ public class Main {
     }
 }
 
-class MyOwnEncoder {
+class RandomKeyGenerator {
     public static final String ALPHABET = "qwertyuiopQWERTYUIOP123456789";
 
-    public static final Integer ALPHABET_SIZE = ALPHABET.length();
+    public final SecureRandom secRandom = new SecureRandom();
 
-    public static final Integer LENGTH_OF_SHORT = 6;
+    public Integer keyLength;
 
-    public String getShort(String longAddress) {
-        for(String s: longAddress) {
+    public RandomKeyGenerator(Integer keyLength) {
+        this.keyLength = keyLength;
+    }
 
+    public String randomGenerator() {
+        StringBuilder sb = new StringBuilder();
+
+        for (int i=0; i < this.keyLength; i++) {
+            sb.append(ALPHABET.charAt(secRandom.nextInt(ALPHABET.length())));
         }
+
+        return sb.toString();
     }
 
-    public String getLong(String shortAddress) {
-
-    }
 }
 
-class UrlShorterService {
+interface ShorterUrl {
+    String getShortUrl(String fullUrl);
+    String getFullUrl(String shortUrl);
+}
 
-    public MyOwnEncoder encoder;
+class UrlShorterService implements ShorterUrl{
+
+    public RandomKeyGenerator randomKeyGenerator;
 
     public ConcurrentMap<String, String> shorterMap = new ConcurrentHashMap<>();
 
-    public UrlShorterService(MyOwnEncoder encoder) {
-        this.encoder = encoder;
+    public UrlShorterService(RandomKeyGenerator randomKeyGenerator) {
+        this.randomKeyGenerator = randomKeyGenerator;
+    }
+
+    @Override
+    public String getShortUrl(String fullUrl) {
+        return "";
+    }
+
+    @Override
+    public String getFullUrl(String shortUrl) {
+        String tempUrl =  randomKeyGenerator.randomGenerator();
+
+        shorterMap.computeIfAbsent();
     }
 }
