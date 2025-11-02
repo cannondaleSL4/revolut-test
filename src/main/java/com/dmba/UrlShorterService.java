@@ -1,5 +1,7 @@
 package com.dmba;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -18,9 +20,15 @@ public class UrlShorterService implements ShorterUrl {
     }
 
     @Override
-    public String getShortUrl(String fullUrl) throws ShortUrlCustomException {
+    public String getShortUrl(String fullUrl)  {
         if (fullUrl == null || fullUrl.isEmpty()) {
             throw new ShortUrlCustomException("Your URL is empty");
+        }
+
+        try {
+            new URL(fullUrl);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
         }
 
         try {
