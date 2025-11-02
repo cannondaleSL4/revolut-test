@@ -1,13 +1,5 @@
 package com.dmba;
 
-import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
         final int KEY_LENGTH = 6;
@@ -27,96 +19,96 @@ public class Main {
     }
 }
 
-class RandomKeyGenerator {
-    public static final String ALPHABET = "qwertyuiopQWERTYUIOP123456789";
+//class RandomKeyGenerator {
+//    public static final String ALPHABET = "qwertyuiopQWERTYUIOP123456789";
+//
+//    public final SecureRandom secRandom = new SecureRandom();
+//
+//    public Integer keyLength;
+//
+//    public RandomKeyGenerator(Integer keyLength) {
+//        this.keyLength = keyLength;
+//    }
+//
+//    public String randomGenerator() {
+//        StringBuilder sb = new StringBuilder();
+//
+//        for (int i=0; i < this.keyLength; i++) {
+//            sb.append(ALPHABET.charAt(secRandom.nextInt(ALPHABET.length())));
+//        }
+//
+//        return sb.toString();
+//    }
+//
+//}
 
-    public final SecureRandom secRandom = new SecureRandom();
+//interface ShorterUrl {
+//    String getShortUrl(String fullUrl) throws ShortUrlCustomException;
+//    Optional<String> getFullUrl(String shortUrl);
+//}
 
-    public Integer keyLength;
-
-    public RandomKeyGenerator(Integer keyLength) {
-        this.keyLength = keyLength;
-    }
-
-    public String randomGenerator() {
-        StringBuilder sb = new StringBuilder();
-
-        for (int i=0; i < this.keyLength; i++) {
-            sb.append(ALPHABET.charAt(secRandom.nextInt(ALPHABET.length())));
-        }
-
-        return sb.toString();
-    }
-
-}
-
-interface ShorterUrl {
-    String getShortUrl(String fullUrl) throws ShortUrlCustomException;
-    Optional<String> getFullUrl(String shortUrl);
-}
-
-class UrlShorterService implements ShorterUrl{
-
-    public RandomKeyGenerator randomKeyGenerator;
-
-    public ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-
-    public Map<String, String> shortTolong = new HashMap<>();
-    public Map<String, String> longToShort = new HashMap<>();
-
-    public UrlShorterService(RandomKeyGenerator randomKeyGenerator) {
-        this.randomKeyGenerator = randomKeyGenerator;
-    }
-
-    @Override
-    public String getShortUrl(String fullUrl) throws ShortUrlCustomException {
-        if (fullUrl == null || fullUrl.isEmpty()) {
-            throw new ShortUrlCustomException("Your URL is empty");
-        }
-
-        try {
-            lock.writeLock().lock();
-            String checkExists = longToShort.get(fullUrl);
-            if (checkExists != null) {
-                return checkExists;
-            }
-
-            String shortKey = null;
-
-            final int MAX_ATTEMPTS = 5;
-            for (int i = 0; i < MAX_ATTEMPTS; i++) {
-                shortKey = this.randomKeyGenerator.randomGenerator();
-
-                if (!shortTolong.containsKey(shortKey)) {
-                    break;
-                }
-
-                if (i == MAX_ATTEMPTS - 1) {
-                    throw new ShortUrlCustomException("Failed to generate a unique key after " + MAX_ATTEMPTS + " attempts.");
-                }
-            }
-            longToShort.put(fullUrl, shortKey);
-            shortTolong.put(shortKey, fullUrl);
-            return shortKey;
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    @Override
-    public Optional<String> getFullUrl(String shortUrl) {
-        try {
-            lock.readLock().lock();
-            String result = shortTolong.get(shortUrl);
-            return Optional.ofNullable(result);
-        } finally {
-            lock.readLock().unlock();
-        }
-    }
-}
-
-class ShortUrlCustomException extends RuntimeException {
-    public ShortUrlCustomException(String message) {
-        super(message);
-    }
-}
+//class UrlShorterService implements ShorterUrl{
+//
+//    public RandomKeyGenerator randomKeyGenerator;
+//
+//    public ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+//
+//    public Map<String, String> shortTolong = new HashMap<>();
+//    public Map<String, String> longToShort = new HashMap<>();
+//
+//    public UrlShorterService(RandomKeyGenerator randomKeyGenerator) {
+//        this.randomKeyGenerator = randomKeyGenerator;
+//    }
+//
+//    @Override
+//    public String getShortUrl(String fullUrl) throws ShortUrlCustomException {
+//        if (fullUrl == null || fullUrl.isEmpty()) {
+//            throw new ShortUrlCustomException("Your URL is empty");
+//        }
+//
+//        try {
+//            lock.writeLock().lock();
+//            String checkExists = longToShort.get(fullUrl);
+//            if (checkExists != null) {
+//                return checkExists;
+//            }
+//
+//            String shortKey = null;
+//
+//            final int MAX_ATTEMPTS = 5;
+//            for (int i = 0; i < MAX_ATTEMPTS; i++) {
+//                shortKey = this.randomKeyGenerator.randomGenerator();
+//
+//                if (!shortTolong.containsKey(shortKey)) {
+//                    break;
+//                }
+//
+//                if (i == MAX_ATTEMPTS - 1) {
+//                    throw new ShortUrlCustomException("Failed to generate a unique key after " + MAX_ATTEMPTS + " attempts.");
+//                }
+//            }
+//            longToShort.put(fullUrl, shortKey);
+//            shortTolong.put(shortKey, fullUrl);
+//            return shortKey;
+//        } finally {
+//            lock.writeLock().unlock();
+//        }
+//    }
+//
+//    @Override
+//    public Optional<String> getFullUrl(String shortUrl) {
+//        try {
+//            lock.readLock().lock();
+//            String result = shortTolong.get(shortUrl);
+//            return Optional.ofNullable(result);
+//        } finally {
+//            lock.readLock().unlock();
+//        }
+//    }
+//}
+//
+//class ShortUrlCustomException extends RuntimeException {
+//    public ShortUrlCustomException(String message) {
+//        super(message);
+//    }
+//}
