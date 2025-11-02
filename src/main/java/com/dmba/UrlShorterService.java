@@ -58,7 +58,7 @@ public class UrlShorterService implements ShorterUrl {
             throw new ShortUrlCustomException("Your URL is empty");
         }
 
-        if (!randomKeyGenerator.pattern.matcher(shortUrl).matches()) {
+        if (!randomKeyGenerator.checkLetters(shortUrl)) {
             return Optional.empty();
         }
 
