@@ -1,10 +1,13 @@
 package com.dmba;
 
 import java.security.SecureRandom;
+import java.util.regex.Pattern;
 
 public class RandomKeyGenerator {
 
     public static final String ALPHABET = "qwertyuiopQWERTYUIOP123456789";
+
+    public static final Pattern pattern = Pattern.compile(ALPHABET);
 
     public final SecureRandom secRandom = new SecureRandom();
 

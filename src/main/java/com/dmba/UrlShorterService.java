@@ -54,6 +54,14 @@ public class UrlShorterService implements ShorterUrl {
 
     @Override
     public Optional<String> getFullUrl(String shortUrl) {
+        if (shortUrl == null || shortUrl.isEmpty()) {
+            throw new ShortUrlCustomException("Your URL is empty");
+        }
+
+        if (!randomKeyGenerator.pattern.matcher(shortUrl).matches()) {
+            return Optional.empty();
+        }
+
         try {
             lock.readLock().lock();
             String result = shortTolong.get(shortUrl);
