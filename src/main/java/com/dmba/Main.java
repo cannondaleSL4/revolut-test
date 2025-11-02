@@ -71,6 +71,10 @@ class LoadBalancerService implements LoadBalancer {
 
 class Backend {
 
+    public String getId() {
+        return id;
+    }
+
     private final String id;
 
     public Backend(String id) {
@@ -90,5 +94,4 @@ class Backend {
     public void releaseConnection() {
         activeConnections.decrementAndGet();
     }
-
 }
