@@ -63,7 +63,7 @@ public class UrlShorterService implements ShorterUrl {
     @Override
     public Optional<String> getFullUrl(String shortUrl) {
         if (shortUrl == null || shortUrl.isEmpty()) {
-            throw new ShortUrlCustomException("Your URL is empty");
+            throw new IllegalArgumentException("Your URL is empty");
         }
 
         if (!randomKeyGenerator.checkLetters(shortUrl)) {
