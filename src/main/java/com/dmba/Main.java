@@ -132,7 +132,7 @@ class ShortCodeService implements ShortCode {
     }
 
     @Override
-    public Optional<String> getFullAddress(String shortCode) {
+    public Optional<String> getFullAddress(@NotNull String shortCode) {
         if (!randonShortCode.validateShortCode(shortCode)) {
             return Optional.empty();
         }
