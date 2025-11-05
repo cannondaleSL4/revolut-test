@@ -53,7 +53,6 @@ interface ServerRegister {
 
 class LoadBalancerService implements LoadBalancer, ServerRegister {
 
-
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     private final List<Backend> backends;
@@ -126,6 +125,10 @@ class LoadBalancerService implements LoadBalancer, ServerRegister {
         }
 
     }
+
+    public List<Backend> getBackends() {
+        return backends;
+    }
 }
 
 
@@ -138,6 +141,10 @@ class Backend {
 
     public Backend(String id) {
         this.id = id;
+    }
+
+    public AtomicInteger getConnections() {
+        return connections;
     }
 
     public void increaseConnection() {
