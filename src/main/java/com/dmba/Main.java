@@ -1,35 +1,34 @@
 package com.dmba;
 
+
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Main {
     public static void main(String[] args) {
     }
 }
 
-class CashbackProcessor {
+record TransactionEvent(UUID txId, UUID userId, BigDecimal amount, String mcc) {}
 
+class CashBackProcessor {
     private final Map<UUID, Boolean> processedTransactions = new ConcurrentHashMap<>();
-    private final Map<UUID, LongAdder> monthlyAccruals = new ConcurrentHashMap<>();
+    private final Map<UUID, AtomicLong> monthlyAccruals = new ConcurrentHashMap<>();
 
-    private static final long MAX_MONTHLY_BONUS = 3000_00L;
-    private static final double CASHBACK_RATE = 0.05;
+    private static final long MAX_MONTH_BONUS = 3000_00L;
+    private static final BigDecimal CASHBACK_RATE = new BigDecimal("0.05");
 
     public void onTransactionReceived(TransactionEvent event) {
-
         if (processedTransactions.putIfAbsent(event.txId(), Boolean.TRUE) != null) {
             return;
         }
 
         try {
             long bonusCandidate = calculateBonus(event.amount());
-
             accrueWithLimit(event.userId(), bonusCandidate);
-
         } catch (Exception e) {
             processedTransactions.remove(event.txId());
             throw e;
@@ -37,34 +36,32 @@ class CashbackProcessor {
     }
 
     private void accrueWithLimit(UUID userId, long amount) {
-        monthlyAccruals.compute(userId, (id, currentTotal) -> {
-            if (currentTotal == null) {
-                currentTotal = new LongAdder();
+        AtomicLong currentTotal = monthlyAccruals.computeIfAbsent(userId, k -> new AtomicLong(0));
+        while(true) {
+            long currentSum = currentTotal.get();
+            if (currentSum >= MAX_MONTH_BONUS) {
+                return;
             }
 
-            long currentSum = currentTotal.sum();
+            long canAdd = Math.min(amount, MAX_MONTH_BONUS - currentSum);
+            long nextSum = currentSum + canAdd;
 
-            if (currentSum >= MAX_MONTHLY_BONUS) {
-                return currentTotal;
+            if (currentTotal.compareAndSet(currentSum, nextSum)) {
+                if (canAdd > 0) {
+                    saveToDb(userId, canAdd);
+                }
+                break;
             }
-
-            long actualAccrual = Math.min(amount, MAX_MONTHLY_BONUS - currentSum);
-            currentTotal.add(actualAccrual);
-
-            saveToDb(userId, actualAccrual);
-            return currentTotal;
-        });
-    }
-
-    private long calculateBonus(BigDecimal amount) {
-        return amount.multiply(BigDecimal.valueOf(CASHBACK_RATE))
-                .multiply(BigDecimal.valueOf(100))
-                .longValue();
+        }
     }
 
     public void saveToDb(UUID userId, long amount) {
         System.out.printf("User %s earned %d units\n", userId, amount);
     }
-}
 
-record TransactionEvent(UUID txId, UUID userId, BigDecimal amount, String mcc) {}
+    private long calculateBonus(BigDecimal amount) {
+        return amount.multiply(CASHBACK_RATE)
+                .multiply(BigDecimal.valueOf(100))
+                .longValue();
+    }
+}
