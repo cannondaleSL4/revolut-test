@@ -12,17 +12,23 @@ public class Main {
     }
 }
 
-record TransactionEvent(UUID txId, UUID userId, BigDecimal amount, String mcc) {}
+record TransactionEvent(UUID txId, UUID userId, BigDecimal amount, String mcc){}
 
 class CashBackProcessor {
-    private final Map<UUID, Boolean> processedTransactions = new ConcurrentHashMap<>();
-    private final Map<UUID, AtomicLong> monthlyAccruals = new ConcurrentHashMap<>();
 
-    private static final long MAX_MONTH_BONUS = 3000_00L;
-    private static final BigDecimal CASHBACK_RATE = new BigDecimal("0.05");
+    private final Map<UUID, Boolean> processedTransaction = new ConcurrentHashMap<>();
+    private final Map<UUID, AtomicLong>  monthlyAccruals = new ConcurrentHashMap<>();
+
+    private final long maxMonthlyBonus;
+    private final BigDecimal cashBackRate;
+
+    public CashBackProcessor(long maxMonthlyBonus, BigDecimal cashBackRate) {
+        this.maxMonthlyBonus = maxMonthlyBonus;
+        this.cashBackRate = cashBackRate;
+    }
 
     public void onTransactionReceived(TransactionEvent event) {
-        if (processedTransactions.putIfAbsent(event.txId(), Boolean.TRUE) != null) {
+        if (processedTransaction.putIfAbsent(event.txId(), Boolean.TRUE) != null) {
             return;
         }
 
@@ -30,38 +36,37 @@ class CashBackProcessor {
             long bonusCandidate = calculateBonus(event.amount());
             accrueWithLimit(event.userId(), bonusCandidate);
         } catch (Exception e) {
-            processedTransactions.remove(event.txId());
+            processedTransaction.remove(event.txId());
             throw e;
         }
     }
 
     private void accrueWithLimit(UUID userId, long amount) {
         AtomicLong currentTotal = monthlyAccruals.computeIfAbsent(userId, k -> new AtomicLong(0));
-        while(true) {
+        while (true) {
             long currentSum = currentTotal.get();
-            if (currentSum >= MAX_MONTH_BONUS) {
-                return;
-            }
+            if (currentSum >= maxMonthlyBonus) return;
 
-            long canAdd = Math.min(amount, MAX_MONTH_BONUS - currentSum);
+            long canAdd = Math.min(amount, maxMonthlyBonus - currentSum);
             long nextSum = currentSum + canAdd;
 
             if (currentTotal.compareAndSet(currentSum, nextSum)) {
-                if (canAdd > 0) {
-                    saveToDb(userId, canAdd);
-                }
                 break;
             }
         }
     }
 
-    public void saveToDb(UUID userId, long amount) {
-        System.out.printf("User %s earned %d units\n", userId, amount);
-    }
-
     private long calculateBonus(BigDecimal amount) {
-        return amount.multiply(CASHBACK_RATE)
+        return amount.multiply(cashBackRate)
                 .multiply(BigDecimal.valueOf(100))
                 .longValue();
+    }
+
+    public Map<UUID, Boolean> getProcessedTransaction() {
+        return processedTransaction;
+    }
+
+    public Map<UUID, AtomicLong> getMonthlyAccruals() {
+        return monthlyAccruals;
     }
 }
