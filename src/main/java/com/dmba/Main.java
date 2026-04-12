@@ -22,7 +22,7 @@ class Wallet {
 
     @Getter
     @Setter
-    private BigDecimal balance;
+    private volatile BigDecimal balance;
     public final ReentrantLock lock = new ReentrantLock();
 
     public Wallet(UUID userId, BigDecimal balance) {
